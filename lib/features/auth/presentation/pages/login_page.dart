@@ -1,12 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Escuchamos el estado para el spinner de carga
+    final authState = ref.watch(authNotifierProvider);
+
+    // Escuchamos para navegar al Home si hay éxito, o mostrar error
+    ref.listen<AsyncValue<void>>(authNotifierProvider, (previous, next) {
+      next.when(
+        data: (_) {
+          if (previous is AsyncLoading) {
+            context.go('/home'); // ¡Entrada exitosa!
+          }
+        },
+        error: (error, stack) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString()),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        loading: () {},
+      );
+    });
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
       appBar: AppBar(
@@ -20,150 +60,87 @@ class LoginPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
-
-              // 1. Título de bienvenida
               const Text(
                 'Welcome Back',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.primaryBlack,
-                ),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Sign in to access your digital closet.',
-                style: TextStyle(fontSize: 16, color: AppTheme.textGrey),
+                style: TextStyle(color: AppTheme.textGrey),
               ),
               const SizedBox(height: 40),
 
-              // 2. Formulario de Login
               _buildInputField(
                 label: 'Email',
                 icon: Icons.email_outlined,
                 hintText: 'hello@example.com',
                 keyboardType: TextInputType.emailAddress,
+                controller: _emailController,
               ),
               const SizedBox(height: 20),
-
               _buildInputField(
                 label: 'Password',
                 icon: Icons.lock_outline,
                 hintText: '••••••••',
                 isPassword: true,
+                controller: _passwordController,
               ),
 
-              // 3. Recuperar contraseña (Alineado a la derecha)
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 0,
-                    ),
-                  ),
-                  onPressed: () {
-                    // Lógica para recuperar contraseña
-                  },
+                  onPressed: () {}, // Aquí irá recuperar contraseña luego
                   child: const Text(
                     'Forgot Password?',
-                    style: TextStyle(
-                      color: AppTheme.accentPurple,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(color: AppTheme.textGrey),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 30),
 
-              // 4. Botón de Login Normal
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accentPurple,
                   ),
-                  onPressed: () {
-                    // Llamar al UseCase de Login con Email
-                  },
-                  child: const Text('Sign In'),
+                  onPressed: authState.isLoading
+                      ? null
+                      : () {
+                          if (_emailController.text.isEmpty ||
+                              _passwordController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please fill all fields'),
+                              ),
+                            );
+                            return;
+                          }
+                          // Ejecutamos el SignIn
+                          ref
+                              .read(authNotifierProvider.notifier)
+                              .signIn(
+                                _emailController.text.trim(),
+                                _passwordController.text.trim(),
+                              );
+                        },
+                  child: authState.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Sign In'),
                 ),
               ),
 
               const SizedBox(height: 30),
-
-              // 5. Divisor Visual
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: Colors.black12)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Or continue with',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  const Expanded(child: Divider(color: Colors.black12)),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              // 6. Botón de Google
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    side: const BorderSide(color: Colors.black12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: () {
-                    // Llamar al SignInWithGoogleUseCase
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.network(
-                        'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
-                        height: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Google',
-                        style: TextStyle(
-                          color: AppTheme.primaryBlack,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // 7. Redirección al Registro
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    "Don't have an account? ",
+                    'Don\'t have an account? ',
                     style: TextStyle(color: AppTheme.textGrey),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      // Navegar a la pantalla de Registro
-                      context.pushReplacement('/register');
-                    },
+                    onTap: () => context.pushReplacement('/register'),
                     child: const Text(
                       'Sign Up',
                       style: TextStyle(
@@ -174,7 +151,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -182,11 +158,11 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  // Mismo componente reutilizable para mantener la consistencia
   Widget _buildInputField({
     required String label,
     required IconData icon,
     required String hintText,
+    required TextEditingController controller,
     bool isPassword = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
@@ -202,6 +178,7 @@ class LoginPage extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
           decoration: InputDecoration(
