@@ -19,10 +19,20 @@ class EditProfileNotifier extends StateNotifier<AsyncValue<void>> {
 
   EditProfileNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
 
-  Future<void> updateProfile({required String fullName, String? bio}) async {
+  Future<void> updateProfile({
+    required String fullName,
+    String? bio,
+    String? gender,
+    String? birthday,
+  }) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.updateProfile(fullName: fullName, bio: bio);
+      await _repository.updateProfile(
+        fullName: fullName,
+        bio: bio,
+        gender: gender,
+        birthday: birthday,
+      );
       state = const AsyncValue.data(null);
       // Forzamos al profileProvider a que dispare una nueva búsqueda en Supabase
       _ref.invalidate(profileProvider);

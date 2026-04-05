@@ -19,6 +19,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   
   File? _selectedImage;
   String? _currentAvatarUrl;
+  
+  String? _selectedGender;
+  DateTime? _selectedBirthday;
+
+  final List<String> _genderOptions = [
+    'Male',
+    'Female',
+    'Non-binary',
+    'Prefer not to say',
+  ];
 
   @override
   void initState() {
@@ -30,6 +40,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         _bioController.text = profile['bio'] ?? '';
         setState(() {
           _currentAvatarUrl = profile['avatar_url'];
+          _selectedGender = profile['gender'];
+          if (profile['birthday'] != null) {
+            _selectedBirthday = DateTime.tryParse(profile['birthday'] as String);
+          }
         });
       }
     });
@@ -54,6 +68,42 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
   }
 
+  Future<void> _pickBirthday() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedBirthday ?? DateTime(DateTime.now().year - 20),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppTheme.accentPurple,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedBirthday = picked;
+      });
+    }
+  }
+
+  String _calculateAge() {
+    if (_selectedBirthday == null) return '';
+    final now = DateTime.now();
+    int age = now.year - _selectedBirthday!.year;
+    if (now.month < _selectedBirthday!.month || 
+        (now.month == _selectedBirthday!.month && now.day < _selectedBirthday!.day)) {
+      age--;
+    }
+    return age.toString();
+  }
+
   void _saveProfile() async {
     final newName = _nameController.text.trim();
     final newBio = _bioController.text.trim();
@@ -62,6 +112,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     await ref.read(editProfileNotifierProvider.notifier).updateProfile(
           fullName: newName,
           bio: newBio.isEmpty ? null : newBio,
+          gender: _selectedGender,
+          birthday: _selectedBirthday?.toIso8601String(),
         );
 
     // Si todo salió bien, cerramos. Notar que la imagen ya se subió en el paso anterior.
@@ -167,9 +219,63 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   labelText: 'Bio',
                   hintText: 'Tell us about your style...',
                   labelStyle: const TextStyle(color: AppTheme.textGrey),
+                  prefixIcon: const Icon(Icons.edit_note, color: AppTheme.accentPurple),
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              DropdownButtonFormField<String>(
+                value: _selectedGender,
+                dropdownColor: Theme.of(context).colorScheme.surface,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Gender',
+                  labelStyle: const TextStyle(color: AppTheme.textGrey),
+                  prefixIcon: const Icon(Icons.transgender, color: AppTheme.accentPurple),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
+                items: _genderOptions.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                onChanged: (val) {
+                  setState(() => _selectedGender = val);
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              InkWell(
+                onTap: _pickBirthday,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Birthday',
+                    labelStyle: const TextStyle(color: AppTheme.textGrey),
+                    prefixIcon: const Icon(Icons.cake, color: AppTheme.accentPurple),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedBirthday == null 
+                            ? 'Select your birthday' 
+                            : '${_selectedBirthday!.year}-${_selectedBirthday!.month.toString().padLeft(2, '0')}-${_selectedBirthday!.day.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          color: _selectedBirthday == null ? AppTheme.textGrey : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      if (_selectedBirthday != null)
+                        Text(
+                          '(Age: ${_calculateAge()})',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            color: AppTheme.accentPurple,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               

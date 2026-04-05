@@ -19,13 +19,20 @@ class ProfileRepository {
     return response;
   }
 
-  Future<void> updateProfile({required String fullName, String? bio}) async {
+  Future<void> updateProfile({
+    required String fullName,
+    String? bio,
+    String? gender,
+    String? birthday,
+  }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
     final updates = {
       'full_name': fullName,
       if (bio != null) 'bio': bio,
+      if (gender != null) 'gender': gender,
+      if (birthday != null) 'birthday': birthday,
     };
 
     await _supabase
