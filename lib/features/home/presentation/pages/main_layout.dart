@@ -15,8 +15,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     const HomePage(),
-    const Center(child: Text('Outfits Guardados')),
-    const Center(child: Text('Tienda')),
+    const Center(child: Text('Saved Outfits')),
+    const Center(child: Text('Store')),
     const ProfilePage(),
   ];
 
@@ -53,7 +53,7 @@ class _MainLayoutState extends State<MainLayout> {
               child: _buildNavBarItem(
                 icon: Icons.checkroom,
                 index: 0,
-                label: 'Armario',
+                label: 'Closet',
               ),
             ),
             Expanded(
@@ -77,7 +77,7 @@ class _MainLayoutState extends State<MainLayout> {
               child: _buildNavBarItem(
                 icon: Icons.person_outline,
                 index: 3,
-                label: 'Perfil',
+                label: 'Profile',
               ),
             ),
           ],
@@ -131,13 +131,13 @@ class _MainLayoutState extends State<MainLayout> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Generador de Outfits IA ✨',
+              'AI Outfit Generator ✨',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.shuffle, color: AppTheme.accentPurple),
-              title: const Text('Sorpréndeme (Auto-Match)'),
+              title: const Text('Surprise Me (Auto-Match)'),
               onTap: () {},
             ),
             ListTile(
@@ -145,7 +145,7 @@ class _MainLayoutState extends State<MainLayout> {
                 Icons.wb_sunny_outlined,
                 color: Colors.orange,
               ),
-              title: const Text('Generar por Clima'),
+              title: const Text('Generate by Weather'),
               onTap: () {},
             ),
           ],

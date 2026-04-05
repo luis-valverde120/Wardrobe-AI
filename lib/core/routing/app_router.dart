@@ -5,6 +5,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/home/presentation/pages/main_layout.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/closet/presentation/pages/add_clothing_page.dart';
 
 // Configuramos nuestro enrutador global
 final goRouter = GoRouter(
@@ -39,6 +40,10 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/edit-profile',
       builder: (context, state) => const EditProfilePage(),
+    ),
+    GoRoute(
+      path: '/add-clothing',
+      builder: (context, state) => const AddClothingPage(),
     ),
   ],
 );

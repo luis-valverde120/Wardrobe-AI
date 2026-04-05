@@ -21,7 +21,7 @@ class ProfileRepository {
 
   Future<void> updateProfile({required String fullName, String? bio}) async {
     final user = _supabase.auth.currentUser;
-    if (user == null) throw Exception('Usuario no autenticado');
+    if (user == null) throw Exception('User not authenticated');
 
     final updates = {
       'full_name': fullName,
@@ -36,7 +36,7 @@ class ProfileRepository {
 
   Future<String> uploadAvatar(File imageFile) async {
     final user = _supabase.auth.currentUser;
-    if (user == null) throw Exception('Usuario no autenticado');
+    if (user == null) throw Exception('User not authenticated');
 
     final fileExt = imageFile.path.split('.').last;
     final fileName = '${user.id}-${DateTime.now().millisecondsSinceEpoch}.$fileExt';

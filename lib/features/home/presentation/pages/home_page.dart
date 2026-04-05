@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/profile_provider.dart';
+import '../../../closet/data/models/clothing_item.dart';
+import '../../../closet/presentation/providers/closet_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -9,6 +12,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileProvider);
+    final closetAsync = ref.watch(closetNotifierProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -22,62 +26,75 @@ class HomePage extends ConsumerWidget {
               elevation: 0,
               toolbarHeight: 80,
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Good Morning,',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.textGrey,
-                          fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Good Morning,',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textGrey,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      profileAsync.when(
-                        data: (profile) {
-                          final String fullName = profile?['full_name'] ?? 'Guest';
-                          final String firstName = fullName.split(' ')[0];
-                          return Text(
-                            '$firstName 👋',
+                        profileAsync.when(
+                          data: (profile) {
+                            final String fullName = profile?['full_name'] ?? 'Guest';
+                            final String firstName = fullName.split(' ')[0];
+                            return Text(
+                              '$firstName 👋',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            );
+                          },
+                          loading: () => Text(
+                            '...',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
-                          );
-                        },
-                        loading: () => Text(
-                          '...',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          error: (error, _) => Text(
+                            'Error',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                         ),
-                        error: (error, _) => Text(
-                          'Error',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // User Avatar Placeholder
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppTheme.accentPurple.withOpacity(0.1),
-                    child: const Icon(
-                      Icons.person,
-                      color: AppTheme.accentPurple,
+                      ],
                     ),
+                  ),
+                  // Avatar in AppBar
+                  profileAsync.when(
+                    data: (profile) {
+                      final url = profile?['avatar_url'] as String?;
+                      return CircleAvatar(
+                        radius: 22,
+                        backgroundColor: AppTheme.accentPurple.withOpacity(0.1),
+                        backgroundImage: url != null ? NetworkImage(url) : null,
+                        child: url == null ? const Icon(Icons.person, color: AppTheme.accentPurple) : null,
+                      );
+                    },
+                    loading: () => const CircleAvatar(radius: 22, backgroundColor: Colors.grey),
+                    error: (_, __) => const CircleAvatar(radius: 22, backgroundColor: Colors.red),
                   ),
                 ],
               ),
+              actions: [
+                IconButton(
+                  onPressed: () => context.push('/add-clothing'),
+                  icon: const Icon(Icons.add_circle, color: AppTheme.accentPurple, size: 36),
+                ),
+                const SizedBox(width: 12),
+              ],
             ),
 
             // 2. AI Quick Action Banner
@@ -119,24 +136,23 @@ class HomePage extends ConsumerWidget {
                             Text(
                               'Use AI to auto-tag and organize your clothes.',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white70,
                                 fontSize: 14,
                               ),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.accentPurple,
+                                backgroundColor: Theme.of(context).colorScheme.surface,
+                                foregroundColor: AppTheme.accentPurple,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                   vertical: 12,
                                 ),
                                 minimumSize: Size.zero,
                               ),
-                              onPressed: () {
-                                // Action to open camera/scanner
-                              },
-                              child: const Text('Scan Now'),
+                              onPressed: () => context.push('/add-clothing'),
+                              child: const Text('Add Clothes', style: TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
@@ -150,7 +166,7 @@ class HomePage extends ConsumerWidget {
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.auto_awesome,
+                          Icons.camera_alt,
                           color: Colors.white,
                           size: 40,
                         ),
@@ -172,7 +188,7 @@ class HomePage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Recently Added',
+                      'My Closet',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -191,48 +207,71 @@ class HomePage extends ConsumerWidget {
               ),
             ),
 
-            // 4. Clothing Grid (Mock Data)
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+            // 4. Clothing Grid (Real Data)
+            closetAsync.when(
+              data: (items) {
+                if (items.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(40.0),
+                      child: Center(
+                        child: Text(
+                          'You haven\'t added any items yet.\nTap "Add Clothes" to start!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppTheme.textGrey, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return _buildClothingCard(context, items[index]);
+                      },
+                      childCount: items.length,
+                    ),
+                  ),
+                );
+              },
+              loading: () => const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(50.0),
+                  child: Center(child: CircularProgressIndicator(color: AppTheme.accentPurple)),
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return _buildMockClothingCard(context, index);
-                  },
-                  childCount: 4, // Show 4 mock items
+              ),
+              error: (error, _) => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(50.0),
+                  child: Center(child: Text('Error: $error', style: const TextStyle(color: Colors.red))),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)), // Bottom padding for navbar
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMockClothingCard(BuildContext context, int index) {
-    // Array de colores pastel para simular fotos sin necesidad de internet
-    final mockColors = [
-      Colors.blueGrey.shade100,
-      Colors.brown.shade100,
-      Colors.grey.shade200,
-      Colors.indigo.shade100,
-    ];
-
+  Widget _buildClothingCard(BuildContext context, ClothingItem item) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -242,15 +281,18 @@ class HomePage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: mockColors[index % mockColors.length],
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-              child: const Center(
-                child: Icon(Icons.checkroom, color: Colors.white, size: 50),
+              child: Image.network(
+                item.imageUrl,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey.shade200,
+                  child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                ),
               ),
             ),
           ),
@@ -260,12 +302,17 @@ class HomePage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Item ${index + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  item.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'Category',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                  item.category,
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),
               ],
             ),
