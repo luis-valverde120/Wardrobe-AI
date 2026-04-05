@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'home_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -16,7 +17,7 @@ class _MainLayoutState extends State<MainLayout> {
     const HomePage(),
     const Center(child: Text('Outfits Guardados')),
     const Center(child: Text('Tienda')),
-    const Center(child: Text('Perfil')),
+    const ProfilePage(),
   ];
 
   @override

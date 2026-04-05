@@ -44,4 +44,26 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncValue.error(e, stackTrace); // Error a la vista
     }
   }
+
+  // 3. Función de Login con Google
+  Future<void> signInWithGoogle() async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.signInWithGoogle();
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  // 4. Función de Logout
+  Future<void> signOut() async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.signOut();
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
 }

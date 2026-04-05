@@ -5,10 +5,14 @@ class AppTheme {
   static const Color primaryBlack = Color(0xFF121212);
   static const Color backgroundWhite = Color(0xFFFAFAFA);
   static const Color surfaceWhite = Color(0xFFFFFFFF);
-  static const Color accentPurple = Color(
-    0xFF6C63FF,
-  ); // Un toque tecnológico para la IA
+  static const Color accentPurple = Color(0xFF6C63FF);
   static const Color textGrey = Color(0xFF757575);
+
+  // Dark Theme Palette
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkTextPrimary = Color(0xFFFAFAFA);
+  static const Color darkTextGrey = Color(0xFFA0A0A0);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -40,6 +44,51 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceWhite,
+        contentPadding: const EdgeInsets.all(20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: accentPurple, width: 2),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      scaffoldBackgroundColor: darkBackground,
+      colorScheme: const ColorScheme.dark(
+        primary: darkTextPrimary,
+        secondary: accentPurple,
+        surface: darkSurface,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: darkTextPrimary,
+          foregroundColor: primaryBlack,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurface,
         contentPadding: const EdgeInsets.all(20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

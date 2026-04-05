@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/providers/profile_provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
       body: SafeArea(
@@ -31,12 +35,34 @@ class HomePage extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const Text(
-                        'Luis 👋', // Mock data
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.primaryBlack,
+                      profileAsync.when(
+                        data: (profile) {
+                          final String fullName = profile?['full_name'] ?? 'Guest';
+                          final String firstName = fullName.split(' ')[0];
+                          return Text(
+                            '$firstName 👋',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primaryBlack,
+                            ),
+                          );
+                        },
+                        loading: () => const Text(
+                          '...',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.primaryBlack,
+                          ),
+                        ),
+                        error: (error, _) => const Text(
+                          'Error',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.primaryBlack,
+                          ),
                         ),
                       ),
                     ],

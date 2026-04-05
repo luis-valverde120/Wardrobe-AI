@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
 
-class WelcomePage extends StatefulWidget {
+class WelcomePage extends ConsumerStatefulWidget {
   const WelcomePage({super.key});
 
   @override
-  State<WelcomePage> createState() => _WelcomePageState();
+  ConsumerState<WelcomePage> createState() => _WelcomePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> {
+class _WelcomePageState extends ConsumerState<WelcomePage> {
   // Variables para controlar el inicio de las animaciones
   bool _animate = false;
 
@@ -28,6 +31,10 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Escuchamos el estado de autenticación (por si está cargando el login de google)
+    final authState = ref.watch(authNotifierProvider);
+    final bool isLoading = authState.isLoading;
+
     // Usamos MediaQuery para que el diseño se adapte a cualquier tamaño de pantalla
     final size = MediaQuery.of(context).size;
 
@@ -130,47 +137,124 @@ class _WelcomePageState extends State<WelcomePage> {
 
                   const Spacer(flex: 2),
 
-                  // 5. BOTONES DE ACCIÓN (LOGIN Y REGISTRO)
+                  // 5. BOTONES DE ACCIÓN (OAUTH Y REGISTRO)
                   AnimatedAnimatedElement(
                     animate: _animate,
                     delayMilliseconds: 500,
                     child: Column(
                       children: [
-                        // Botón de Registro (Elevated - Azul)
+                        // Botón Prominente de Google
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
+                          child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.accentPurple,
+                              backgroundColor: AppTheme.primaryBlack,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 5,
+                              shadowColor: AppTheme.primaryBlack.withOpacity(0.3),
                             ),
-                            onPressed: () {
-                              // Navegar a Registro
-                              context.push('/register');
-                            },
-                            child: const Text('Create Account'),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Botón de Login (TextButton - Minimalista)
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                            ),
-                            onPressed: () {
-                              // Navegar a Login
-                              context.push('/login');
-                            },
-                            child: const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                color: AppTheme.primaryBlack,
+                            icon: isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.g_mobiledata, size: 36), // Placeholder para logo G
+                            label: Text(
+                              isLoading ? 'Loading...' : 'Continue with Google',
+                              style: const TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    await ref
+                                        .read(authNotifierProvider.notifier)
+                                        .signInWithGoogle();
+                                    
+                                    // Verificamos si Google devolvió sesión exitosa
+                                    final isLoggedIn = Supabase.instance.client.auth.currentSession != null;
+                                    if (isLoggedIn && context.mounted) {
+                                      context.go('/home');
+                                    }
+                                  },
                           ),
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Separador Elegante
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: Colors.grey.shade300)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Or continue with Email',
+                                style: TextStyle(
+                                  color: AppTheme.textGrey,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: Colors.grey.shade300)),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 24),
+
+                        // Opciones secundarias
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  side: BorderSide(color: AppTheme.accentPurple.withOpacity(0.5)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () => context.push('/register'),
+                                child: const Text(
+                                  'Create Account',
+                                  style: TextStyle(
+                                    color: AppTheme.accentPurple,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () => context.push('/login'),
+                                child: const Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    color: AppTheme.primaryBlack,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
