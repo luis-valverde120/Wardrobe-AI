@@ -27,7 +27,7 @@ class AppTheme {
       // Global Style for the buttons this is for no repeat the style in every button
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryBlack,
+          backgroundColor: accentPurple,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -40,6 +40,12 @@ class AppTheme {
             letterSpacing: 0.5,
           ),
         ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: surfaceWhite,
+        selectedItemColor: accentPurple,
+        unselectedItemColor: textGrey,
+        elevation: 10,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -72,8 +78,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: darkTextPrimary,
-          foregroundColor: primaryBlack,
+          backgroundColor: accentPurple,
+          foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
@@ -85,6 +91,12 @@ class AppTheme {
             letterSpacing: 0.5,
           ),
         ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: darkSurface,
+        selectedItemColor: accentPurple,
+        unselectedItemColor: darkTextGrey,
+        elevation: 10,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

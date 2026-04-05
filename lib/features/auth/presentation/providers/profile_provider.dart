@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,12 +19,23 @@ class EditProfileNotifier extends StateNotifier<AsyncValue<void>> {
 
   EditProfileNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
 
-  Future<void> updateName(String fullName) async {
+  Future<void> updateProfile({required String fullName, String? bio}) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.updateName(fullName);
+      await _repository.updateProfile(fullName: fullName, bio: bio);
       state = const AsyncValue.data(null);
       // Forzamos al profileProvider a que dispare una nueva búsqueda en Supabase
+      _ref.invalidate(profileProvider);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> uploadAvatar(File imageFile) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.uploadAvatar(imageFile);
+      state = const AsyncValue.data(null);
       _ref.invalidate(profileProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

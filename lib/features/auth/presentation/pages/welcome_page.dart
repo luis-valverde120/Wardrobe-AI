@@ -75,7 +75,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
@@ -105,15 +105,15 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                       children: [
                         RichText(
                           textAlign: TextAlign.center,
-                          text: const TextSpan(
+                          text: TextSpan(
                             text: 'Elevate Your Style\nwith ',
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.primaryBlack,
+                              color: Theme.of(context).colorScheme.onSurface,
                               height: 1.2,
                             ),
-                            children: [
+                            children: const [
                               TextSpan(
                                 text: 'Wardrobe AI',
                                 style: TextStyle(color: AppTheme.accentPurple),
@@ -147,16 +147,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryBlack,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 5,
-                              shadowColor: AppTheme.primaryBlack.withOpacity(0.3),
-                            ),
                             icon: isLoading
                                 ? const SizedBox(
                                     width: 24,
@@ -245,10 +235,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                                   ),
                                 ),
                                 onPressed: () => context.push('/login'),
-                                child: const Text(
+                                child: Text(
                                   'Sign In',
                                   style: TextStyle(
-                                    color: AppTheme.primaryBlack,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),

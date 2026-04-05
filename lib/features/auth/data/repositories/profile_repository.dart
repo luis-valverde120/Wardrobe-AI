@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileRepository {
@@ -18,13 +19,40 @@ class ProfileRepository {
     return response;
   }
 
-  Future<void> updateName(String fullName) async {
+  Future<void> updateProfile({required String fullName, String? bio}) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('Usuario no autenticado');
 
+    final updates = {
+      'full_name': fullName,
+      if (bio != null) 'bio': bio,
+    };
+
     await _supabase
         .from('profiles')
-        .update({'full_name': fullName})
+        .update(updates)
         .eq('id', user.id);
+  }
+
+  Future<String> uploadAvatar(File imageFile) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('Usuario no autenticado');
+
+    final fileExt = imageFile.path.split('.').last;
+    final fileName = '${user.id}-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+    final filePath = fileName;
+
+    await _supabase.storage.from('avatars').upload(
+          filePath,
+          imageFile,
+          fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+        );
+
+    final imageUrlResponse = _supabase.storage.from('avatars').getPublicUrl(filePath);
+    
+    // Guardar URL en el perfil
+    await _supabase.from('profiles').update({'avatar_url': imageUrlResponse}).eq('id', user.id);
+
+    return imageUrlResponse;
   }
 }

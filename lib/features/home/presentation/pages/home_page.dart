@@ -11,13 +11,13 @@ class HomePage extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             // 1. Premium App Bar
             SliverAppBar(
-              backgroundColor: AppTheme.backgroundWhite,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               floating: true,
               elevation: 0,
               toolbarHeight: 80,
@@ -41,27 +41,27 @@ class HomePage extends ConsumerWidget {
                           final String firstName = fullName.split(' ')[0];
                           return Text(
                             '$firstName 👋',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.primaryBlack,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           );
                         },
-                        loading: () => const Text(
+                        loading: () => Text(
                           '...',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.primaryBlack,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
-                        error: (error, _) => const Text(
+                        error: (error, _) => Text(
                           'Error',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.primaryBlack,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -88,14 +88,14 @@ class HomePage extends ConsumerWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [AppTheme.primaryBlack, Color(0xFF2A2A2A)],
+                      colors: [AppTheme.accentPurple, Color(0xFF9D65FF)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryBlack.withOpacity(0.2),
+                        color: AppTheme.accentPurple.withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -171,12 +171,12 @@ class HomePage extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Recently Added',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryBlack,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     TextButton(
@@ -203,7 +203,7 @@ class HomePage extends ConsumerWidget {
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    return _buildMockClothingCard(index);
+                    return _buildMockClothingCard(context, index);
                   },
                   childCount: 4, // Show 4 mock items
                 ),
@@ -217,7 +217,7 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMockClothingCard(int index) {
+  Widget _buildMockClothingCard(BuildContext context, int index) {
     // Array de colores pastel para simular fotos sin necesidad de internet
     final mockColors = [
       Colors.blueGrey.shade100,
@@ -228,7 +228,7 @@ class HomePage extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surfaceWhite,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

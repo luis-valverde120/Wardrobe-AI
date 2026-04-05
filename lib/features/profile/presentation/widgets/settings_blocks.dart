@@ -117,6 +117,9 @@ class SettingsSwitchTile extends StatelessWidget {
           value: value,
           onChanged: onChanged,
           activeColor: AppTheme.accentPurple,
+          inactiveThumbColor: Colors.grey.shade400,
+          inactiveTrackColor: Colors.grey.shade200,
+          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
         ),
       ),
     );

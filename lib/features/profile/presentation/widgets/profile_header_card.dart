@@ -26,33 +26,46 @@ class ProfileHeaderCard extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [AppTheme.accentPurple, Color(0xFF9D65FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.accentPurple.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+          profileAsync.when(
+            data: (profile) {
+              final avatarUrl = profile?['avatar_url'] as String?;
+              return Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.accentPurple.withOpacity(0.1),
+                  border: Border.all(color: AppTheme.accentPurple.withOpacity(0.5), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.accentPurple.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ],
+                child: ClipOval(
+                  child: avatarUrl != null && avatarUrl.isNotEmpty
+                      ? Image.network(avatarUrl, fit: BoxFit.cover)
+                      : const Center(
+                          child: Icon(Icons.person, size: 50, color: AppTheme.accentPurple),
+                        ),
+                ),
+              );
+            },
+            loading: () => const SizedBox(
+              width: 100,
+              height: 100,
+              child: CircularProgressIndicator(color: AppTheme.accentPurple),
             ),
-            child: const Center(
-              child: Icon(Icons.person, size: 50, color: Colors.white),
-            ),
+            error: (_, __) => const Icon(Icons.error, color: Colors.red),
           ),
           const SizedBox(height: 16),
           profileAsync.when(
             data: (profile) {
-              final name = profile?['full_name'] ?? 'Usuario';
-              final email = Supabase.instance.client.auth.currentUser?.email ?? 'Sin correo';
+              final name = profile?['full_name'] ?? 'Guest';
+              final bio = profile?['bio'];
+              final email = Supabase.instance.client.auth.currentUser?.email ?? 'No email';
               return Column(
                 children: [
                   Text(
@@ -63,7 +76,19 @@ class ProfileHeaderCard extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  if (bio != null && bio.toString().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      bio,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textGrey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
                   Text(
                     email,
                     style: const TextStyle(
@@ -74,8 +99,8 @@ class ProfileHeaderCard extends ConsumerWidget {
                 ],
               );
             },
-            loading: () => const CircularProgressIndicator(color: AppTheme.accentPurple),
-            error: (_, __) => const Text('Error al cargar perfil'),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const Text('Error loading profile'),
           ),
         ],
       ),

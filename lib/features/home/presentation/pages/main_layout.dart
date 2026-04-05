@@ -23,7 +23,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(index: _currentIndex, children: _screens),
 
       floatingActionButton: FloatingActionButton(
@@ -39,7 +39,7 @@ class _MainLayoutState extends State<MainLayout> {
 
       // BARRA INFERIOR CORREGIDA
       bottomNavigationBar: BottomAppBar(
-        color: AppTheme.surfaceWhite,
+        color: Theme.of(context).colorScheme.surface,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
         // 1. Reseteamos el padding interno que Material 3 pone por defecto
@@ -121,7 +121,7 @@ class _MainLayoutState extends State<MainLayout> {
   void _showAIGeneratorOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
