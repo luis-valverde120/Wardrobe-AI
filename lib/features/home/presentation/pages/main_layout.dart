@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'home_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
@@ -147,6 +148,14 @@ class _MainLayoutState extends State<MainLayout> {
               ),
               title: const Text('Generate by Weather'),
               onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.auto_fix_high, color: Colors.purple),
+              title: const Text('Asesor de Moda IA (Gemma)'),
+              onTap: () {
+                Navigator.pop(context); // Cerrar modal
+                context.push('/fashion-advisor');
+              },
             ),
           ],
         ),
