@@ -27,6 +27,10 @@ class ClosetRepository {
     required String title,
     required String category,
     String? color,
+    String? pattern,
+    String? style,
+    String? season,
+    String? aiDescription,
   }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('No authenticated user');
@@ -50,6 +54,10 @@ class ClosetRepository {
       'image_url': imageUrlResponse,
       'category': category,
       if (color != null) 'color': color,
+      if (pattern != null) 'pattern': pattern,
+      if (style != null) 'style': style,
+      if (season != null) 'season': season,
+      if (aiDescription != null) 'ai_description': aiDescription,
     };
 
     final response = await _supabase

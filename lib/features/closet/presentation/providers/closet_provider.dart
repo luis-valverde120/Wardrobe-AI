@@ -3,9 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/clothing_item.dart';
 import '../../data/repositories/closet_repository.dart';
+import '../../data/services/background_removal_service.dart';
+import '../../data/services/vision_ai_service.dart';
 
 final closetRepositoryProvider = Provider<ClosetRepository>((ref) {
   return ClosetRepository(Supabase.instance.client);
+});
+
+final backgroundRemovalProvider = Provider<BackgroundRemovalService>((ref) {
+  return BackgroundRemovalService();
+});
+
+final visionAiProvider = Provider<VisionAiService>((ref) {
+  return VisionAiService();
 });
 
 class ClosetNotifier extends AsyncNotifier<List<ClothingItem>> {
@@ -20,6 +30,10 @@ class ClosetNotifier extends AsyncNotifier<List<ClothingItem>> {
     required String title,
     required String category,
     String? color,
+    String? pattern,
+    String? style,
+    String? season,
+    String? aiDescription,
   }) async {
     final repository = ref.watch(closetRepositoryProvider);
     
@@ -32,6 +46,10 @@ class ClosetNotifier extends AsyncNotifier<List<ClothingItem>> {
         title: title,
         category: category,
         color: color,
+        pattern: pattern,
+        style: style,
+        season: season,
+        aiDescription: aiDescription,
       );
       
       // Update state cautiously by keeping previous items plus the new one
