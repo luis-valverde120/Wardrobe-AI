@@ -5,8 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class VTONService {
   final String _falApiUrl = 'https://fal.run/fal-ai/idm-vton';
 
-  /// Llama a FAL.ai para realizar el Virtual Try-On
-  /// Recibe la imagen de la persona y la imagen de la prenda (pueden ser URLs o Base64 Data URIs)
+  /// Calls FAL.ai to perform the Virtual Try-On.
+  /// Receives the person's image and the garment image (can be URLs or Base64 Data URIs).
   Future<String> tryOn({
     required String humanImageUrl,
     required String garmentImageUrl,
@@ -14,7 +14,7 @@ class VTONService {
   }) async {
     final falKey = dotenv.env['FAL_KEY'];
     if (falKey == null || falKey.isEmpty) {
-      throw Exception('FAL_KEY no está configurada en el archivo .env');
+      throw Exception('FAL_KEY is not configured in the .env file');
     }
 
     try {
@@ -35,18 +35,17 @@ class VTONService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Fal.ai idm-vton retorna la imagen un arreglo 'image' o simplemente 'image' directamente dependiendo del schema exacto,
-        // pero típicamente tiene "image": {"url": "..."}
+        // Fal.ai idm-vton returns the image typically as {"image": {"url": "..."}}
         if (data['image'] != null && data['image']['url'] != null) {
           return data['image']['url'];
         } else {
-          throw Exception('Estructura de respuesta inesperada desde Fal.ai');
+          throw Exception('Unexpected response structure from Fal.ai');
         }
       } else {
-        throw Exception('Error en Fal.ai: ${response.statusCode} - ${response.body}');
+        throw Exception('Fal.ai error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      throw Exception('Excepción al conectar con Fal.ai: $e');
+      throw Exception('Exception connecting to Fal.ai: $e');
     }
   }
 }

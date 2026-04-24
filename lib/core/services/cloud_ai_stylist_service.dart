@@ -4,78 +4,86 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 
 class CloudAIStylistService {
-  /// Genera una recomendación de moda basada en la ocasión y ropa disponible.
-  /// Puede usar una imagen de contexto (ej. foto del evento) si está disponible.
+  /// Generates a fashion recommendation based on the occasion and available clothes.
+  /// Can use a context image (e.g. photo of the event) if available.
   Future<Map<String, String>> generateOutfit({
     required List<Map<String, dynamic>> availableClothes,
     File? contextImage,
   }) async {
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('La GEMINI_API_KEY no está configurada en tu archivo .env');
+      throw Exception('GEMINI_API_KEY is not configured in your .env file');
     }
 
-    final model = GenerativeModel(
-      model: 'gemini-1.5-flash',
-      apiKey: apiKey,
-    );
+    final model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
 
-    final String clothesContext = availableClothes.map((item) {
-      return "- ${item['id']}: ${item['name'] ?? 'Prenda'}, Color: ${item['color'] ?? 'Desconocido'}, Tipo: ${item['type'] ?? 'General'}";
-    }).join('\n');
+    final String clothesContext = availableClothes
+        .map((item) {
+          return "- ${item['id']}: ${item['name'] ?? 'Garment'}, Color: ${item['color'] ?? 'Unknown'}, Type: ${item['type'] ?? 'General'}";
+        })
+        .join('\n');
 
-    final promptText = '''
-Eres un estilista experto de alta costura. Tu trabajo es analizar el contexto proporcionado (a partir de la imagen adjunta o infiriéndolo) y recomendar EXACTAMENTE UNA PRENDA de la lista de ropa disponible del usuario para que se la pruebe frente al espejo.
+    final promptText =
+        '''
+You are an expert high-fashion stylist. Your job is to analyze the provided context (from the attached image or by inferring it) and recommend EXACTLY ONE GARMENT from the user's available clothing list so they can try it on in the virtual fitting room.
 
-Ropa en el armario:
+Available wardrobe items:
 $clothesContext
 
-Instrucciones:
-1. Evalúa el clima, nivel de formalidad y estilo del contexto detectado.
-2. Escoge UNA prenda superior (camisa, chaqueta, suéter) de la lista que sea la mejor opción.
-3. Devuelve los resultados en ESTRICTO formato JSON. No incluyas backticks (\`\`\`) ni markdown, solo el JSON raw. Formato exacto a devolver:
+Instructions:
+1. Evaluate the weather, formality level, and style of the detected context.
+2. Choose ONE upper-body garment (shirt, jacket, sweater) from the list that is the best option.
+3. Return the results in STRICT JSON format. Do not include backticks or markdown, only the raw JSON. Exact format to return:
 {
-  "occasion": "Breve descripción general del evento/situación (ej: Boda formal de noche, Casual de oficina)",
-  "recommended_item_id": "ID exacto del item escogido de la lista",
-  "description": "Tu razonamiento de 2 o 3 líneas sobre por qué escogiste esta prenda como la ideal para el probador."
+  "occasion": "Brief general description of the event/situation (e.g.: Formal evening wedding, Casual office wear)",
+  "recommended_item_id": "Exact ID of the chosen item from the list",
+  "description": "Your 2-3 line reasoning about why you chose this garment as ideal for the fitting room."
 }
 ''';
 
     try {
       final List<Content> contentList = [];
-      
+
       if (contextImage != null) {
         final imageBytes = await contextImage.readAsBytes();
-        contentList.add(Content.multi([
-          TextPart(promptText),
-          DataPart('image/jpeg', imageBytes),
-        ]));
+        contentList.add(
+          Content.multi([
+            TextPart(promptText),
+            DataPart('image/jpeg', imageBytes),
+          ]),
+        );
       } else {
         contentList.add(Content.text(promptText));
       }
 
       final response = await model.generateContent(contentList);
       final text = response.text ?? '';
-      
+
       try {
-        final cleanText = text.replaceAll('```json', '').replaceAll('```', '').trim();
+        final cleanText = text
+            .replaceAll('```json', '')
+            .replaceAll('```', '')
+            .trim();
         final Map<String, dynamic> result = jsonDecode(cleanText);
-        
+
         return {
-          'occasion': result['occasion']?.toString() ?? 'Contexto Desconocido',
-          'recommended_item_id': result['recommended_item_id']?.toString() ?? '1',
-          'description': result['description']?.toString() ?? 'Outfit recomendado.',
+          'occasion': result['occasion']?.toString() ?? 'Unknown Context',
+          'recommended_item_id':
+              result['recommended_item_id']?.toString() ?? '1',
+          'description':
+              result['description']?.toString() ?? 'Recommended outfit.',
         };
       } catch (e) {
-        // Fallback en caso de que Gemini devuelva algo rarísimo
+        // Fallback in case Gemini returns something unexpected
         return {
-          'occasion': 'Análisis completado',
-          'recommended_item_id': availableClothes.first['id']?.toString() ?? '1',
+          'occasion': 'Analysis completed',
+          'recommended_item_id':
+              availableClothes.first['id']?.toString() ?? '1',
           'description': text,
         };
       }
     } catch (e) {
-      throw Exception('Hubo un error con la API de Gemini: $e');
+      throw Exception('Error with the Gemini API: $e');
     }
   }
 }
