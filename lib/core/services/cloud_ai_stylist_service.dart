@@ -4,9 +4,10 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 
 class CloudAIStylistService {
-  /// Generates a fashion recommendation based on the occasion and available clothes.
-  /// Can use a context image (e.g. photo of the event) if available.
-  Future<Map<String, String>> generateOutfit({
+  /// Generates multiple outfit suggestions based on the user's closet.
+  /// Returns a JSON array with 3-4 outfit combinations, each with
+  /// garment IDs, descriptions, and style tips.
+  Future<List<Map<String, dynamic>>> generateMultipleOutfits({
     required List<Map<String, dynamic>> availableClothes,
     File? contextImage,
   }) async {
@@ -19,26 +20,37 @@ class CloudAIStylistService {
 
     final String clothesContext = availableClothes
         .map((item) {
-          return "- ${item['id']}: ${item['name'] ?? 'Garment'}, Color: ${item['color'] ?? 'Unknown'}, Type: ${item['type'] ?? 'General'}";
+          return "- ID:${item['id']}, Name:${item['name'] ?? 'Garment'}, "
+              "Color:${item['color'] ?? 'Unknown'}, "
+              "Type:${item['type'] ?? 'General'}, "
+              "Style:${item['style'] ?? 'N/A'}, "
+              "Pattern:${item['pattern'] ?? 'N/A'}";
         })
         .join('\n');
 
-    final promptText =
-        '''
-You are an expert high-fashion stylist. Your job is to analyze the provided context (from the attached image or by inferring it) and recommend EXACTLY ONE GARMENT from the user's available clothing list so they can try it on in the virtual fitting room.
+    final promptText = '''
+You are a world-class fashion stylist AI. Analyze the user's wardrobe and the context (from the attached image if available, or infer a general casual day context) to create 3 to 4 unique outfit suggestions.
+
+Each outfit can use 1 to 3 garments combined. Prioritize variety: mix solo looks, layered looks, and different color combinations.
 
 Available wardrobe items:
 $clothesContext
 
 Instructions:
-1. Evaluate the weather, formality level, and style of the detected context.
-2. Choose ONE upper-body garment (shirt, jacket, sweater) from the list that is the best option.
-3. Return the results in STRICT JSON format. Do not include backticks or markdown, only the raw JSON. Exact format to return:
-{
-  "occasion": "Brief general description of the event/situation (e.g.: Formal evening wedding, Casual office wear)",
-  "recommended_item_id": "Exact ID of the chosen item from the list",
-  "description": "Your 2-3 line reasoning about why you chose this garment as ideal for the fitting room."
-}
+1. Create 3-4 distinct outfit combinations using the items above.
+2. For each outfit, pick the BEST primary garment (the one most visible — e.g., jacket over shirt means jacket is first in list).
+3. Give each outfit a short creative name.
+4. Write a brief description explaining why this combination works.
+5. Add a "style_tip" with a specific color or accessory recommendation.
+6. Return STRICT JSON only (no markdown, no backticks). Format:
+[
+  {
+    "name": "Creative Outfit Name",
+    "item_ids": ["id1", "id2"],
+    "description": "2-3 sentences on why this combo works for the context.",
+    "style_tip": "Specific advice like 'Pair with white sneakers and silver accessories for a clean finish.'"
+  }
+]
 ''';
 
     try {
@@ -64,26 +76,39 @@ Instructions:
             .replaceAll('```json', '')
             .replaceAll('```', '')
             .trim();
-        final Map<String, dynamic> result = jsonDecode(cleanText);
-
-        return {
-          'occasion': result['occasion']?.toString() ?? 'Unknown Context',
-          'recommended_item_id':
-              result['recommended_item_id']?.toString() ?? '1',
-          'description':
-              result['description']?.toString() ?? 'Recommended outfit.',
-        };
+        final List<dynamic> results = jsonDecode(cleanText);
+        return results.cast<Map<String, dynamic>>();
       } catch (e) {
-        // Fallback in case Gemini returns something unexpected
-        return {
-          'occasion': 'Analysis completed',
-          'recommended_item_id':
-              availableClothes.first['id']?.toString() ?? '1',
-          'description': text,
-        };
+        // Fallback: return a single outfit with the first garment
+        return [
+          {
+            'name': 'AI Pick',
+            'item_ids': [availableClothes.first['id']?.toString() ?? '1'],
+            'description': text,
+            'style_tip': 'Try combining with neutral accessories.',
+          }
+        ];
       }
     } catch (e) {
       throw Exception('Error with the Gemini API: $e');
     }
+  }
+
+  /// Legacy single outfit generation (kept for backwards compatibility).
+  Future<Map<String, String>> generateOutfit({
+    required List<Map<String, dynamic>> availableClothes,
+    File? contextImage,
+  }) async {
+    final results = await generateMultipleOutfits(
+      availableClothes: availableClothes,
+      contextImage: contextImage,
+    );
+    final first = results.first;
+    return {
+      'occasion': first['name']?.toString() ?? 'Unknown',
+      'recommended_item_id':
+          (first['item_ids'] as List?)?.first?.toString() ?? '1',
+      'description': first['description']?.toString() ?? 'Recommended outfit.',
+    };
   }
 }

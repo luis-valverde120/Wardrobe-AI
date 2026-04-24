@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'home_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
+import '../../../outfits/presentation/pages/saved_outfits_page.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -16,7 +17,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     const HomePage(),
-    const Center(child: Text('Saved Outfits')),
+    const SavedOutfitsPage(),
     const Center(child: Text('Store')),
     const ProfilePage(),
   ];
@@ -38,14 +39,12 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // BARRA INFERIOR CORREGIDA
+      // Bottom navigation bar
       bottomNavigationBar: BottomAppBar(
         color: Theme.of(context).colorScheme.surface,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
-        // 1. Reseteamos el padding interno que Material 3 pone por defecto
         padding: const EdgeInsets.symmetric(horizontal: 0),
-        // 2. Le damos la altura directamente al componente
         height: 70,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -103,7 +102,7 @@ class _MainLayoutState extends State<MainLayout> {
           Icon(
             icon,
             color: isSelected ? AppTheme.accentPurple : AppTheme.textGrey,
-            size: 24, // Tamaño balanceado
+            size: 24,
           ),
           const SizedBox(height: 4),
           Text(
@@ -139,7 +138,11 @@ class _MainLayoutState extends State<MainLayout> {
             ListTile(
               leading: const Icon(Icons.shuffle, color: AppTheme.accentPurple),
               title: const Text('Surprise Me (Auto-Match)'),
-              onTap: () {},
+              subtitle: const Text('AI picks multiple outfits for you'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/fashion-advisor');
+              },
             ),
             ListTile(
               leading: const Icon(
@@ -147,13 +150,15 @@ class _MainLayoutState extends State<MainLayout> {
                 color: Colors.orange,
               ),
               title: const Text('Generate by Weather'),
+              subtitle: const Text('Coming soon'),
               onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.auto_fix_high, color: Colors.purple),
-              title: const Text('Asesor de Moda IA (Gemma)'),
+              title: const Text('AI Fashion Advisor'),
+              subtitle: const Text('Upload a photo for personalized looks'),
               onTap: () {
-                Navigator.pop(context); // Cerrar modal
+                Navigator.pop(context);
                 context.push('/fashion-advisor');
               },
             ),
