@@ -49,7 +49,7 @@ class BackgroundRemovalService {
 
           if (confidence < 0.5) {
             // Es fondo, lo hacemos transparente
-            originalImage.setPixelRgba(x, y, 0, 0, 0, 0);
+            originalImage.setPixel(x, y, img.ColorRgba8(0, 0, 0, 0));
           }
         }
       }

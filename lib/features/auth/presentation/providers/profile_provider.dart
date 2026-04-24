@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/repositories/profile_repository.dart';
 
@@ -13,11 +12,13 @@ final profileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   return repository.getCurrentProfile();
 });
 
-class EditProfileNotifier extends StateNotifier<AsyncValue<void>> {
-  final ProfileRepository _repository;
-  final Ref _ref;
+class EditProfileNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() {
+    return const AsyncValue.data(null);
+  }
 
-  EditProfileNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  ProfileRepository get _repository => ref.watch(profileRepositoryProvider);
 
   Future<void> updateProfile({
     required String fullName,
@@ -34,8 +35,8 @@ class EditProfileNotifier extends StateNotifier<AsyncValue<void>> {
         birthday: birthday,
       );
       state = const AsyncValue.data(null);
-      // Forzamos al profileProvider a que dispare una nueva búsqueda en Supabase
-      _ref.invalidate(profileProvider);
+      // Forzamos al profileProvider a que dispare una nueva busqueda en Supabase
+      ref.invalidate(profileProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -46,13 +47,14 @@ class EditProfileNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repository.uploadAvatar(imageFile);
       state = const AsyncValue.data(null);
-      _ref.invalidate(profileProvider);
+      ref.invalidate(profileProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 }
 
-final editProfileNotifierProvider = StateNotifierProvider<EditProfileNotifier, AsyncValue<void>>((ref) {
-  return EditProfileNotifier(ref.watch(profileRepositoryProvider), ref);
-});
+final editProfileNotifierProvider =
+    NotifierProvider<EditProfileNotifier, AsyncValue<void>>(
+  () => EditProfileNotifier(),
+);

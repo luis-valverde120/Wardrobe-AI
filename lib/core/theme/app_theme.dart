@@ -22,7 +22,6 @@ class AppTheme {
         primary: primaryBlack,
         secondary: accentPurple,
         surface: surfaceWhite,
-        background: backgroundWhite,
       ),
       // Global Style for the buttons this is for no repeat the style in every button
       elevatedButtonTheme: ElevatedButtonThemeData(

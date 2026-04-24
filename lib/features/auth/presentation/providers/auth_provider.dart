@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/repositories/auth_repository.dart';
 
@@ -8,18 +7,16 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(Supabase.instance.client);
 });
 
-// Proveemos el estado de la autenticación
-final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
-      return AuthNotifier(ref.read(authRepositoryProvider));
-    });
+// Proveemos el estado de la autenticacion usando el patron moderno de Notifier
+class AuthNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() {
+    return const AsyncValue.data(null);
+  }
 
-class AuthNotifier extends StateNotifier<AsyncValue<void>> {
-  final AuthRepository _repository;
+  AuthRepository get _repository => ref.read(authRepositoryProvider);
 
-  AuthNotifier(this._repository) : super(const AsyncValue.data(null));
-
-  // 1. Función de Registro
+  // 1. Funcion de Registro
   Future<void> signUp(String email, String password, String fullName) async {
     state = const AsyncValue.loading();
     try {
@@ -34,18 +31,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  // 2. Función de Login (¡Esta es la que faltaba!)
+  // 2. Funcion de Login
   Future<void> signIn(String email, String password) async {
     state = const AsyncValue.loading();
     try {
       await _repository.signIn(email: email, password: password);
-      state = const AsyncValue.data(null); // Éxito
+      state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace); // Error a la vista
+      state = AsyncValue.error(e, stackTrace);
     }
   }
 
-  // 3. Función de Login con Google
+  // 3. Funcion de Login con Google
   Future<void> signInWithGoogle() async {
     state = const AsyncValue.loading();
     try {
@@ -56,7 +53,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  // 4. Función de Logout
+  // 4. Funcion de Logout
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     try {
@@ -67,3 +64,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 }
+
+final authNotifierProvider =
+    NotifierProvider<AuthNotifier, AsyncValue<void>>(
+  () => AuthNotifier(),
+);
