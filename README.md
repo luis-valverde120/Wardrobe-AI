@@ -4,12 +4,14 @@
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack & Architecture
+
 - **Framework:** Flutter (Dart)
-- **State Management:** Riverpod (`flutter_riverpod` using `StateNotifierProvider` and `AsyncNotifierProvider`)
-- **Backend / BaaS:** Supabase (PostgreSQL, Auth, Storage)
-- **Routing:** GoRouter (Declarative Routing)
-- **Design System:** Material 3 (Dynamic Color Schemes with persistent Dark/Light Mode support)
+- **State Management:** Riverpod (Leveraging `AsyncNotifierProvider` for robust asynchronous state handling).
+- **Backend / BaaS:** Supabase (PostgreSQL, Auth, and Storage for optimized image buffer management).
+- **AI Integration:** fal.ai (Harnessing generative diffusion models for real-time virtual try-on inference).
+- **Routing:** GoRouter (Declarative Routing for deep-link support).
+- **Design System:** Material 3 (Custom dynamic color implementation with persistent theme state).
 
 ---
 

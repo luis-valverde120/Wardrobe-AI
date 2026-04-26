@@ -1,9 +1,15 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 
 class CloudAIStylistService {
+  /// Fal.ai any-llm endpoint — uses FAL_KEY, no Gemini quota needed.
+  static const String _falLlmUrl = 'https://fal.run/fal-ai/any-llm';
+
+  /// LLM model to use via Fal.ai (Llama 4 Scout is fast and capable).
+  static const String _llmModel = 'meta-llama/llama-4-scout';
+
   /// Generates multiple outfit suggestions based on the user's closet.
   /// Returns a JSON array with 3-4 outfit combinations, each with
   /// garment IDs, descriptions, and style tips.
@@ -11,12 +17,10 @@ class CloudAIStylistService {
     required List<Map<String, dynamic>> availableClothes,
     File? contextImage,
   }) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('GEMINI_API_KEY is not configured in your .env file');
+    final falKey = dotenv.env['FAL_KEY'];
+    if (falKey == null || falKey.isEmpty) {
+      throw Exception('FAL_KEY is not configured in your .env file');
     }
-
-    final model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
 
     final String clothesContext = availableClothes
         .map((item) {
@@ -29,7 +33,7 @@ class CloudAIStylistService {
         .join('\n');
 
     final promptText = '''
-You are a world-class fashion stylist AI. Analyze the user's wardrobe and the context (from the attached image if available, or infer a general casual day context) to create 3 to 4 unique outfit suggestions.
+You are a world-class fashion stylist AI. Analyze the user's wardrobe to create 3 to 4 unique outfit suggestions.
 
 Each outfit can use 1 to 3 garments combined. Prioritize variety: mix solo looks, layered looks, and different color combinations.
 
@@ -42,7 +46,7 @@ Instructions:
 3. Give each outfit a short creative name.
 4. Write a brief description explaining why this combination works.
 5. Add a "style_tip" with a specific color or accessory recommendation.
-6. Return STRICT JSON only (no markdown, no backticks). Format:
+6. Return STRICT JSON only (no markdown, no backticks, no explanation). Format:
 [
   {
     "name": "Creative Outfit Name",
@@ -54,25 +58,32 @@ Instructions:
 ''';
 
     try {
-      final List<Content> contentList = [];
+      final requestBody = {
+        "prompt": promptText,
+        "model": _llmModel,
+        "temperature": 0.7,
+        "max_tokens": 2048,
+      };
 
-      if (contextImage != null) {
-        final imageBytes = await contextImage.readAsBytes();
-        contentList.add(
-          Content.multi([
-            TextPart(promptText),
-            DataPart('image/jpeg', imageBytes),
-          ]),
-        );
-      } else {
-        contentList.add(Content.text(promptText));
+      final response = await http.post(
+        Uri.parse(_falLlmUrl),
+        headers: {
+          'Authorization': 'Key $falKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Fal.ai LLM error: ${response.statusCode} - ${response.body}');
       }
 
-      final response = await model.generateContent(contentList);
-      final text = response.text ?? '';
+      final data = jsonDecode(response.body);
+      final outputText = data['output'] as String? ?? '';
 
       try {
-        final cleanText = text
+        final cleanText = outputText
             .replaceAll('```json', '')
             .replaceAll('```', '')
             .trim();
@@ -84,13 +95,13 @@ Instructions:
           {
             'name': 'AI Pick',
             'item_ids': [availableClothes.first['id']?.toString() ?? '1'],
-            'description': text,
+            'description': outputText,
             'style_tip': 'Try combining with neutral accessories.',
           }
         ];
       }
     } catch (e) {
-      throw Exception('Error with the Gemini API: $e');
+      throw Exception('Error with the AI stylist: $e');
     }
   }
 
